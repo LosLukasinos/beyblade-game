@@ -1,5 +1,32 @@
 {
   "dependencies": {
+    "com.cdm.figma": {
+      "version": "https://github.com/cdmvision/unity-figma-importer.git#1.9.3",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {
+        "com.unity.nuget.newtonsoft-json": "2.0.2",
+        "com.unity.vectorgraphics": "2.0.0-preview.24"
+      },
+      "hash": "e528f487c0ffe3374d405ead2cc42fdf93903928"
+    },
+    "com.cdm.figma.ui": {
+      "version": "https://github.com/cdmvision/unity-figma-importer.git#1.9.3-ugui",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {
+        "com.cdm.figma": "1.9.3",
+        "com.unity.nuget.newtonsoft-json": "2.0.2",
+        "com.unity.vectorgraphics": "2.0.0-preview.24"
+      },
+      "hash": "8c0bd158cbd23609621b20a481a313b25e956783"
+    },
+    "com.unity.2d.sprite": {
+      "version": "1.0.0",
+      "depth": 2,
+      "source": "builtin",
+      "dependencies": {}
+    },
     "com.unity.ai.navigation": {
       "version": "2.0.4",
       "depth": 0,
@@ -90,6 +117,13 @@
     "com.unity.nuget.mono-cecil": {
       "version": "1.11.4",
       "depth": 3,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.nuget.newtonsoft-json": {
+      "version": "3.2.1",
+      "depth": 1,
       "source": "registry",
       "dependencies": {},
       "url": "https://packages.unity.com"
@@ -220,6 +254,25 @@
         "com.unity.modules.ui": "1.0.0",
         "com.unity.modules.imgui": "1.0.0"
       }
+    },
+    "com.unity.vectorgraphics": {
+      "version": "2.0.0-preview.24",
+      "depth": 1,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.ugui": "1.0.0",
+        "com.unity.2d.sprite": "1.0.0",
+        "com.unity.modules.ui": "1.0.0",
+        "com.unity.modules.physics": "1.0.0",
+        "com.unity.modules.animation": "1.0.0",
+        "com.unity.modules.physics2d": "1.0.0",
+        "com.unity.modules.uielements": "1.0.0",
+        "com.unity.modules.imageconversion": "1.0.0",
+        "com.unity.modules.unitywebrequest": "1.0.0",
+        "com.unity.modules.unitywebrequestwww": "1.0.0",
+        "com.unity.modules.unitywebrequesttexture": "1.0.0"
+      },
+      "url": "https://packages.unity.com"
     },
     "com.unity.visualscripting": {
       "version": "1.9.4",
