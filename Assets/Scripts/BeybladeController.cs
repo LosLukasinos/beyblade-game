@@ -1,0 +1,117 @@
+using UnityEngine;
+
+/// <summary>
+/// Core Beyblade component. Attach this to your beyblade GameObject.
+/// Holds references to all three parts and exposes their combined stats.
+/// </summary>
+[RequireComponent(typeof(Rigidbody))]
+public class BeybladeController : MonoBehaviour
+{
+    [Header("Parts")]
+    public BeybladeTopPart topPart;
+    public BeybladeBodyPart bodyPart;
+    public BeybladeBottomPart bottomPart;
+
+    [Header("Runtime State")]
+    [SerializeField] private float currentSpinSpeed;
+    [SerializeField] private float currentHealth = 100f;
+
+    [Header("Spin Decay")]
+    [Tooltip("How fast the beyblade loses spin speed per second")]
+    public float spinDecayRate = 20f;
+
+    [Tooltip("Beyblade stops fighting below this spin speed")]
+    public float minSpinSpeed = 50f;
+
+    private Rigidbody rb;
+    private bool isAlive = true;
+
+    // ── Public read-only state ──────────────────────────────────────────────
+    public float SpinSpeed => currentSpinSpeed;
+    public bool IsAlive => isAlive;
+    public float Health => currentHealth;
+
+    // ── Derived stats from parts ────────────────────────────────────────────
+    public float Damage => topPart != null ? topPart.damage : 0f;
+    public float KnockbackForce => topPart != null ? topPart.knockbackForce : 0f;
+    public float KnockbackResistance => bodyPart != null ? bodyPart.knockbackResistance : 1f;
+    public float MoveSpeed => bottomPart != null ? bottomPart.moveSpeed : 3f;
+
+    void Awake()
+    {
+        rb = GetComponent<Rigidbody>();
+    }
+
+    void Start()
+    {
+        // Initialise spin speed from the bottom part
+        currentSpinSpeed = bottomPart != null ? bottomPart.initialSpinSpeed : 300f;
+    }
+
+    void Update()
+    {
+        if (!isAlive) return;
+
+        // Gradually decay spin speed over time
+        currentSpinSpeed -= spinDecayRate * Time.deltaTime;
+
+        if (currentSpinSpeed <= minSpinSpeed)
+        {
+            currentSpinSpeed = 0f;
+            Die();
+        }
+    }
+
+    // ── Collision: deal/receive hits ────────────────────────────────────────
+    void OnCollisionEnter(Collision collision)
+    {
+        if (!isAlive) return;
+
+        BeybladeController other = collision.gameObject.GetComponent<BeybladeController>();
+        if (other == null || !other.isAlive) return;
+
+        // Apply damage and knockback TO the other beyblade
+        Vector3 hitDirection = (other.transform.position - transform.position).normalized;
+        other.ReceiveHit(Damage, hitDirection, KnockbackForce);
+    }
+
+    /// <summary>
+    /// Called when this beyblade is hit by another.
+    /// </summary>
+    /// <param name="incomingDamage">Raw damage value from attacker's top part.</param>
+    /// <param name="direction">Direction of knockback.</param>
+    /// <param name="incomingKnockback">Raw knockback force from attacker's top part.</param>
+    public void ReceiveHit(float incomingDamage, Vector3 direction, float incomingKnockback)
+    {
+        if (!isAlive) return;
+
+        // Body part reduces received knockback
+        float finalKnockback = incomingKnockback * (1f - KnockbackResistance);
+        rb.AddForce(direction * finalKnockback, ForceMode.Impulse);
+
+        // Damage also reduces spin speed proportionally
+        currentSpinSpeed -= incomingDamage;
+        currentHealth -= incomingDamage;
+
+        Debug.Log($"{gameObject.name} received {incomingDamage} dmg | knockback {finalKnockback:F1} | spin left {currentSpinSpeed:F0}");
+
+        if (currentHealth <= 0f || currentSpinSpeed <= minSpinSpeed)
+            Die();
+    }
+
+    void Die()
+    {
+        isAlive = false;
+        currentSpinSpeed = 0f;
+        Debug.Log($"{gameObject.name} has been knocked out!");
+        // Hook your game manager / animation / VFX here
+    }
+
+    // ── Visual spin ─────────────────────────────────────────────────────────
+    void LateUpdate()
+    {
+        if (!isAlive) return;
+        // Rotate the beyblade visually based on spin speed
+        transform.Rotate(Vector3.up, currentSpinSpeed * Time.deltaTime, Space.Self);
+    }
+}
