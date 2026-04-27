@@ -2,15 +2,16 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    [SerializeField] float speed = 8f;
-    [SerializeField] float rotationStrength = 100f;
     Rigidbody rb;
     Camera mainCamera;
+    BeybladeController bey;
 
     void Start()
     {
         mainCamera = Camera.main;
         rb = GetComponent<Rigidbody>();
+        bey = GetComponent<BeybladeController>();
+
         StartRotation();
     }
 
@@ -21,6 +22,8 @@ public class PlayerController : MonoBehaviour
 
     void DoMovement()
     {
+        if (bey != null && !bey.IsAlive) return;
+
         var inputX = Input.GetAxis("Horizontal");
         var inputY = Input.GetAxis("Vertical");
 
@@ -32,11 +35,15 @@ public class PlayerController : MonoBehaviour
             movement.y = 0f;
         }
 
+        // Speed now comes from the bottom part
+        float speed = bey != null ? bey.MoveSpeed : 8f;
         rb.AddForce(movement * speed, ForceMode.Acceleration);
     }
 
     void StartRotation()
     {
-        rb.AddTorque(transform.up * rotationStrength);
+        // Initial spin now comes from the bottom part
+        float spinSpeed = bey != null ? bey.SpinSpeed : 100f;
+        rb.AddTorque(transform.up * spinSpeed);
     }
 }
