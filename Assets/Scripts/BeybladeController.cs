@@ -16,6 +16,8 @@ public class BeybladeController : MonoBehaviour
     [SerializeField] private float currentSpinSpeed;
     [SerializeField] private float currentHealth = 100f;
 
+    public float CurrentHealth { get => currentHealth; }
+
     [Header("Spin Decay")]
     [Tooltip("How fast the beyblade loses spin speed per second")]
     public float spinDecayRate = 20f;
@@ -56,7 +58,7 @@ public class BeybladeController : MonoBehaviour
     {
         if (!isAlive) return;
 
-        currentSpinSpeed -= spinDecayRate * Time.deltaTime;
+        //currentSpinSpeed -= spinDecayRate * Time.deltaTime;
 
         if (currentSpinSpeed <= minSpinSpeed)
         {
