@@ -19,19 +19,23 @@ public class BeybladeController : MonoBehaviour
     [Header("Spin Decay")]
     [Tooltip("How fast the beyblade loses spin speed per second")]
     public float spinDecayRate = 20f;
-
     [Tooltip("Beyblade stops fighting below this spin speed")]
     public float minSpinSpeed = 50f;
+
+    [Header("Safety Settings")]
+    [Tooltip("Minimum time between taking hits to prevent instant death")]
+    public float hitCooldown = 2f;
+    private float lastHitTime;
 
     private Rigidbody rb;
     private bool isAlive = true;
 
-    // ── Public read-only state ──────────────────────────────────────────────
+    // -- Public read-only state --
     public float SpinSpeed => currentSpinSpeed;
     public bool IsAlive => isAlive;
     public float Health => currentHealth;
 
-    // ── Derived stats from parts ────────────────────────────────────────────
+    // -- Derived stats from parts --
     public float Damage => topPart != null ? topPart.damage : 0f;
     public float KnockbackForce => topPart != null ? topPart.knockbackForce : 0f;
     public float KnockbackResistance => bodyPart != null ? bodyPart.knockbackResistance : 1f;
@@ -44,25 +48,22 @@ public class BeybladeController : MonoBehaviour
 
     void Start()
     {
-        // Initialise spin speed from the bottom part
         currentSpinSpeed = bottomPart != null ? bottomPart.initialSpinSpeed : 300f;
+        lastHitTime = -hitCooldown; // Initialize so we can be hit immediately at start
     }
 
     void Update()
     {
         if (!isAlive) return;
 
-        // Gradually decay spin speed over time
         currentSpinSpeed -= spinDecayRate * Time.deltaTime;
 
         if (currentSpinSpeed <= minSpinSpeed)
         {
-            currentSpinSpeed = 0f;
             Die();
         }
     }
 
-    // ── Collision: deal/receive hits ────────────────────────────────────────
     void OnCollisionEnter(Collision collision)
     {
         if (!isAlive) return;
@@ -75,25 +76,23 @@ public class BeybladeController : MonoBehaviour
         other.ReceiveHit(Damage, hitDirection, KnockbackForce);
     }
 
-    /// <summary>
-    /// Called when this beyblade is hit by another.
-    /// </summary>
-    /// <param name="incomingDamage">Raw damage value from attacker's top part.</param>
-    /// <param name="direction">Direction of knockback.</param>
-    /// <param name="incomingKnockback">Raw knockback force from attacker's top part.</param>
     public void ReceiveHit(float incomingDamage, Vector3 direction, float incomingKnockback)
     {
-        if (!isAlive) return;
+        // 1. Check if alive OR if we are currently in the cooldown period
+        if (!isAlive || Time.time < lastHitTime + hitCooldown) return;
+
+        // 2. Update the timestamp to "lock" the beyblade from further hits
+        lastHitTime = Time.time;
 
         // Body part reduces received knockback
-        float finalKnockback = incomingKnockback * (1f - KnockbackResistance);
+        float finalKnockback = incomingKnockback * (1f - Mathf.Clamp01(KnockbackResistance));
         rb.AddForce(direction * finalKnockback, ForceMode.Impulse);
 
         // Damage also reduces spin speed proportionally
         currentSpinSpeed -= incomingDamage;
         currentHealth -= incomingDamage;
 
-        Debug.Log($"{gameObject.name} received {incomingDamage} dmg | knockback {finalKnockback:F1} | spin left {currentSpinSpeed:F0}");
+        Debug.Log($"{gameObject.name} hit! Health: {currentHealth:F0} | Spin: {currentSpinSpeed:F0}");
 
         if (currentHealth <= 0f || currentSpinSpeed <= minSpinSpeed)
             Die();
@@ -101,17 +100,17 @@ public class BeybladeController : MonoBehaviour
 
     void Die()
     {
+        if (!isAlive) return;
         isAlive = false;
         currentSpinSpeed = 0f;
+        rb.constraints = RigidbodyConstraints.None;
         Debug.Log($"{gameObject.name} has been knocked out!");
-        // Hook your game manager / animation / VFX here
+        
     }
 
-    // ── Visual spin ─────────────────────────────────────────────────────────
     void LateUpdate()
     {
         if (!isAlive) return;
-        // Rotate the beyblade visually based on spin speed
         transform.Rotate(Vector3.up, currentSpinSpeed * Time.deltaTime, Space.Self);
     }
 }

@@ -36,8 +36,8 @@ public class PlayerController : MonoBehaviour
         }
 
         // Speed now comes from the bottom part
-        float speed = bey != null ? bey.MoveSpeed : 8f;
-        rb.AddForce(movement * speed, ForceMode.Acceleration);
+        float speed = bey != null ? bey.MoveSpeed : 1.25f;
+        rb.AddForce(movement * speed, ForceMode.Impulse);
     }
 
     void StartRotation()
